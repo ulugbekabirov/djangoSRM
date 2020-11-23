@@ -2,10 +2,22 @@ from django.contrib import admin
 
 from . import models
 
-admin.site.register(models.Customer)
 
-admin.site.register(models.Product)
+@admin.register(models.Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ("name", "phone", "email", "date_created")
 
-admin.site.register(models.Order)
 
-admin.site.register(models.Tag)
+@admin.register(models.Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ("name", "price", "category")
+
+
+@admin.register(models.Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ("product", "customer", "date_created", "status")
+
+
+@admin.register(models.Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ("name",)
