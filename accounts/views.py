@@ -1,6 +1,7 @@
-from django.shortcuts import render, HttpResponseRedirect, redirect
+from django.shortcuts import render, HttpResponseRedirect
 from . import models
 from . import forms
+from .filters import OrderFilter
 
 
 def home_view(request):
@@ -8,7 +9,7 @@ def home_view(request):
     total_orders = orders.count()
     orders_delivered = orders.filter(status="Delivered").count()
     orders_pending = orders.filter(status="Pending").count()
-    last_five_orders = orders.order_by("-date_created",)[0:5]
+    last_five_orders = orders.order_by("-date_created", )[0:5]
     customers = models.Customer.objects.all()
     context = {"orders": orders,
                "total_orders": total_orders,
@@ -20,7 +21,14 @@ def home_view(request):
 
 
 def customers_view(request, customer_id):
-    context = {"customer": models.Customer.objects.get(id=customer_id)}
+    customer = models.Customer.objects.get(id=customer_id)
+    orders = customer.order_set.all()
+    my_filter = OrderFilter(request.GET, queryset=orders)
+    orders = my_filter.qs
+    context = {"customer": customer,
+               "orders": orders,
+               "my_filter": my_filter, }
+
     return render(request, "accounts/customers.html", context)
 
 
@@ -60,7 +68,7 @@ def update_order_view(request, order_id):
     context = {
         "order": order,
         "form": forms.OrderForm(instance=order)}
-    return render(request, "accounts/updateOrder.html",  context)
+    return render(request, "accounts/updateOrder.html", context)
 
 
 def update_customer_view(request, customer_id):
