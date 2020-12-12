@@ -1,7 +1,49 @@
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import render, HttpResponseRedirect, redirect
 from . import models
 from . import forms
 from .filters import OrderFilter
+from .forms import CreateUserForm
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("login")
+
+
+def login_view(request):
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect("home")
+        else:
+            messages.info(request, "Username or Password is incorrect")
+            return redirect("login")
+
+    return render(request, "accounts/login.html")
+
+
+def register_view(request):
+    form = CreateUserForm()
+
+    if request.method == "POST":
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get("username")
+            messages.success(request, "Account was created for {}".format(username))
+            return redirect("login")
+
+    context = {
+        "form": form
+    }
+    return render(request, "accounts/register.html", context=context)
 
 
 def home_view(request):
@@ -37,6 +79,7 @@ def products_view(request):
     return render(request, "accounts/products.html", context)
 
 
+@login_required(login_url='login')
 def create_order_view(request):
     context = {"form": forms.OrderForm}
     if request.method == "POST":
@@ -47,6 +90,7 @@ def create_order_view(request):
     return render(request, "accounts/createOrder.html", context)
 
 
+@login_required(login_url='login')
 def create_customer_view(request):
     context = {"form": forms.CustomerForm}
     if request.method == "POST":
@@ -57,6 +101,7 @@ def create_customer_view(request):
     return render(request, "accounts/createCustomer.html", context)
 
 
+@login_required(login_url='login')
 def update_order_view(request, order_id):
     order = models.Order.objects.get(id=order_id)
     if request.method == "POST":
@@ -71,6 +116,7 @@ def update_order_view(request, order_id):
     return render(request, "accounts/updateOrder.html", context)
 
 
+@login_required(login_url='login')
 def update_customer_view(request, customer_id):
     customer = models.Customer.objects.get(id=customer_id)
     if request.method == "POST":
@@ -85,6 +131,7 @@ def update_customer_view(request, customer_id):
     return render(request, "accounts/updateCustomer.html", context)
 
 
+@login_required(login_url='login')
 def delete_order_view(request, order_id):
     order = models.Order.objects.get(id=order_id)
     if request.method == "POST":
