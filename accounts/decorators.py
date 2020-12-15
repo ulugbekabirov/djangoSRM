@@ -33,7 +33,7 @@ def admin_only(view_func):
                 return view_func(request, *args, **kwargs)
             else:
                 return redirect("user")
-
+        return HttpResponse("<h1>User is not part of any group</h1>")
     return wrapper_func
 
 
