@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.shortcuts import render, HttpResponseRedirect, redirect
 from . import models
 from . import forms
@@ -43,8 +44,10 @@ def register_view(request):
     if request.method == "POST":
         form = CreateUserForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
             username = form.cleaned_data.get("username")
+            group = Group.objects.get(name="customer")
+            user.groups.add(group)
             messages.success(request, "Account was created for {}".format(username))
             return redirect("login")
 
