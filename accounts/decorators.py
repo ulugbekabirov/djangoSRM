@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
@@ -33,7 +34,9 @@ def admin_only(view_func):
                 return view_func(request, *args, **kwargs)
             else:
                 return redirect("user")
-        return HttpResponse("<h1>User is not part of any group</h1>")
+
+        messages.info(request, "That User does not belong to any group")
+        return redirect("logout")
     return wrapper_func
 
 
