@@ -8,6 +8,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 
+def user_view(request):
+    context = {}
+    return render(request, "accounts/user.html", context)
+
+
 def logout_view(request):
     logout(request)
     return redirect("login")
