@@ -1,6 +1,7 @@
 from django.shortcuts import render, HttpResponseRedirect, redirect
 from . import models
 from . import forms
+from .decorators import unauthenticated_user, allowed_users, admin_only
 from .filters import OrderFilter
 from .forms import CreateUserForm
 from django.contrib import messages
@@ -8,6 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 
+@login_required(login_url='login')
 def user_view(request):
     context = {}
     return render(request, "accounts/user.html", context)
@@ -18,8 +20,8 @@ def logout_view(request):
     return redirect("login")
 
 
+@unauthenticated_user
 def login_view(request):
-
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -34,6 +36,7 @@ def login_view(request):
     return render(request, "accounts/login.html")
 
 
+@unauthenticated_user
 def register_view(request):
     form = CreateUserForm()
 
@@ -51,6 +54,8 @@ def register_view(request):
     return render(request, "accounts/register.html", context=context)
 
 
+@login_required(login_url='login')
+@admin_only
 def home_view(request):
     orders = models.Order.objects.all()
     total_orders = orders.count()
@@ -67,6 +72,7 @@ def home_view(request):
     return render(request, "accounts/dashboard.html", context)
 
 
+@login_required(login_url='login')
 def customers_view(request, customer_id):
     customer = models.Customer.objects.get(id=customer_id)
     orders = customer.order_set.all()
@@ -79,6 +85,7 @@ def customers_view(request, customer_id):
     return render(request, "accounts/customers.html", context)
 
 
+@login_required(login_url='login')
 def products_view(request):
     context = {"products": models.Product.objects.all()}
     return render(request, "accounts/products.html", context)
