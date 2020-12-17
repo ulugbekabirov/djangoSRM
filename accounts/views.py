@@ -10,9 +10,17 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 
+@allowed_users(["customer"])
 @login_required(login_url='login')
 def user_view(request):
-    context = {}
+    orders = request.user.customer.order_set.all()
+    # print((request.user.email))
+    context = {
+        "orders": orders,
+        "total_orders": orders.count(),
+        "orders_delivered": orders.filter(status="Delivered").count(),
+        "orders_pending": orders.filter(status="Pending").count(),
+    }
     return render(request, "accounts/user.html", context)
 
 
@@ -48,6 +56,11 @@ def register_view(request):
             username = form.cleaned_data.get("username")
             group = Group.objects.get(name="customer")
             user.groups.add(group)
+            models.Customer.objects.create(
+                user=user,
+                name=user.username,
+                email=user.email,
+            )
             messages.success(request, "Account was created for {}".format(username))
             return redirect("login")
 
