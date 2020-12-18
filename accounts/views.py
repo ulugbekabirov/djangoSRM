@@ -4,10 +4,23 @@ from . import models
 from . import forms
 from .decorators import unauthenticated_user, allowed_users, admin_only
 from .filters import OrderFilter
-from .forms import CreateUserForm
+from .forms import CreateUserForm, CustomerForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+
+
+@login_required(login_url="login")
+@allowed_users(["customer"])
+def account_settings_view(request):
+    if request.method == "POST":
+        form = forms.CustomerForm(request.POST, instance=request.user.customer)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account successfully created")
+            return redirect("home")
+    context = {"form": CustomerForm(instance=request.user.customer)}
+    return render(request, "accounts/account_settings.html", context)
 
 
 @allowed_users(["customer"])
