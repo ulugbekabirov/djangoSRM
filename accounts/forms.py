@@ -20,3 +20,4 @@ class CustomerForm(ModelForm):
     class Meta:
         model = models.Customer
         fields = "__all__"
+        exclude = "user",
