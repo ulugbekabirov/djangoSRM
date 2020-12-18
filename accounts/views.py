@@ -4,15 +4,36 @@ from . import models
 from . import forms
 from .decorators import unauthenticated_user, allowed_users, admin_only
 from .filters import OrderFilter
-from .forms import CreateUserForm
+from .forms import CreateUserForm, CustomerForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 
+@login_required(login_url="login")
+@allowed_users(["customer"])
+def account_settings_view(request):
+    if request.method == "POST":
+        form = forms.CustomerForm(request.POST, instance=request.user.customer)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account successfully created")
+            return redirect("home")
+    context = {"form": CustomerForm(instance=request.user.customer)}
+    return render(request, "accounts/account_settings.html", context)
+
+
+@allowed_users(["customer"])
 @login_required(login_url='login')
 def user_view(request):
-    context = {}
+    orders = request.user.customer.order_set.all()
+    # print((request.user.email))
+    context = {
+        "orders": orders,
+        "total_orders": orders.count(),
+        "orders_delivered": orders.filter(status="Delivered").count(),
+        "orders_pending": orders.filter(status="Pending").count(),
+    }
     return render(request, "accounts/user.html", context)
 
 
@@ -48,6 +69,11 @@ def register_view(request):
             username = form.cleaned_data.get("username")
             group = Group.objects.get(name="customer")
             user.groups.add(group)
+            models.Customer.objects.create(
+                user=user,
+                name=user.username,
+                email=user.email,
+            )
             messages.success(request, "Account was created for {}".format(username))
             return redirect("login")
 
